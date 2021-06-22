@@ -1,6 +1,6 @@
 #!/bin/sh # Begin Boilerplate - see https://github.com/Flare576/scripts/tree/main/js
 ":" //;NODE_PATH=$(npm -g root) exec node -- "$0" "$@"
-const M=require("module"),o=M.prototype.require;M.prototype.require=function(e){const{execSync:r,spawnSync:n}=o("child_process");var t="--fsljs";try{return o.apply(this,arguments)}catch(s){console.log(`Installing ${e}`),r(`npm -g install ${e}`,{encoding:"utf8"});var p=process;a=p.argv;var l=a.length;2<l&&p[l-1]===t&&p.exit(42),a.shift();var e=a.shift();a.push(t);let c=null;for(;null===c||42===c;)c=n(e,a,{cwd:p.cwd(),detatched:!0,stdio:"inherit"}),c=c.status;p.exit()}}; // End Boilerplate
+const t=require("module"),e=t.prototype.require;t.prototype.require=function(n){const{execSync:r,spawnSync:s}=e("child_process");var c="--fsl";try{return e.apply(this,arguments)}catch(t){console.log(`Installing ${n}`);const{argv:i,exit:a,cwd:p}=process;r(`npm -g install ${n}`,{encoding:"utf8"});var o=i.length;2<o&&i[o-1]===c&&a(42),i.shift();var l=i.shift();i.push(c);let e=null;for(;null===e||42===e;)e=s(l,i,{cwd:p(),detached:!0,stdio:"inherit"}),e=e.status;a()}}; // End Boilerplate
 
 const version = "0.3.0"
 const usage = `Adds specified files (or all if none specified) to git staging and commits (if -m used) or starts a \

@@ -2,11 +2,12 @@
 ":" //;NODE_PATH=$(npm -g root) exec node -- "$0" "$@"
 const t=require("module"),e=t.prototype.require;t.prototype.require=function(n){const{execSync:r,spawnSync:s}=e("child_process");var c="--fsl";try{return e.apply(this,arguments)}catch(t){console.log(`Installing ${n}`);const{argv:i,exit:a,cwd:p}=process;r(`npm -g install ${n}`,{encoding:"utf8"});var o=i.length;2<o&&i[o-1]===c&&a(42),i.shift();var l=i.shift();i.push(c);let e=null;for(;null===e||42===e;)e=s(l,i,{cwd:p(),detached:!0,stdio:"inherit"}),e=e.status;a()}}; // End Boilerplate
 
-const version = "0.3.0"
+const version = "0.4.0"
 const usage = `Adds specified files (or all if none specified) to git staging and commits (if -m used) or starts a \
 verbose commit.`;
 const argv = require('yargs')
-  .usage(usage)
+  .strict()
+  .usage("$0", usage)
   .version(version)
   .alias('help', 'h')
   .alias('version', 'v')
@@ -17,6 +18,7 @@ const argv = require('yargs')
   .option( 'message', { alias: 'm', type: 'string', description: 'Message to pass to commit. Omit for -v' })
   .option( 'no-verify', {alias: 'n', type: 'boolean', description: 'Passed through to git commit' })
   .option( 'skip', { alias: 's', type: 'boolean', description: 'Skip Adding files' })
+  .option( 'talisman', { alias: 't', type: 'boolean', description: 'Run Talisman interactive scan' })
   .option( 'push', { alias: 'p', type: 'boolean', description: 'Flag to push after commit' })
   .option( 'pullRequest', { alias: 'r', type: 'boolean', description: 'Flag to start a PR after commit' })
   .option( 'updateOnly', { alias: 'u', type: 'boolean', description: 'Flag to ignore untracked files' })
@@ -31,7 +33,9 @@ const argv = require('yargs')
   .example( 'gac -a -f myFile', 'Removes all files from last commit, adds only myFile, opens new commit with prior ' +
     'message in amend mode' )
   .argv;
-const {execSync, spawn} = require('child_process');
+const {execSync, spawnSync, spawn} = require('child_process');
+const eOpt = { encoding: 'utf8' };
+const sOpt = { stdio: [ 'inherit', 'inherit', 'pipe' ] } ;
 
 (async () => {
   const customFileAmendFlag = argv.amend && (argv.file || argv.fileSkip);
@@ -41,8 +45,8 @@ const {execSync, spawn} = require('child_process');
   if (!argv.skip) {
     // if an Amend commit is being done with a file listing, need to be sure we're getting the new listing
     if (customFileAmendFlag) {
-      execSync(`git reset --soft HEAD^`, { encoding: 'utf8' });
-      execSync(`git restore --staged .`, { encoding: 'utf8' });
+      execSync('git reset --soft HEAD^', eOpt);
+      execSync('git restore --staged .', eOpt);
     }
 
     let files = '.';
@@ -51,19 +55,27 @@ const {execSync, spawn} = require('child_process');
     }
 
     if (argv.updateOnly) {
-      execSync(`git add -u ${files}`, { encoding: 'utf8' });
+      execSync(`git add -u ${files}`, eOpt);
     } else {
-      execSync(`git add ${files}`, { encoding: 'utf8' });
+      execSync(`git add ${files}`, eOpt);
     }
 
     if (argv.fileSkip) {
-      execSync(`git reset ${argv.fileSkip.join(' ')}`, { encoding: 'utf8' });
+      execSync(`git reset ${argv.fileSkip.join(' ')}`, eOpt);
     }
 
     if (customFileAmendFlag) {
-      execSync(`git commit --no-edit -c ORIG_HEAD`, { encoding: 'utf8' });
+      execSync('git commit --no-edit -c ORIG_HEAD', eOpt);
     }
   }
+
+  if (argv.talisman) {
+    const result = spawnSync('talisman',[ '--interactive', '--githook', 'pre-commit' ], sOpt);
+    if (result.error) {
+      console.log('Error calling Talisman. Ensure it is installed.');
+    }
+  }
+
   let childArgs = ['commit', '--verbose'];
   if (argv.amend) {
     childArgs.push('--amend');
@@ -76,7 +88,7 @@ const {execSync, spawn} = require('child_process');
   }
 
   let errors = '';
-  const git = spawn('git', childArgs, {stdio: [ 'inherit', 'inherit', 'pipe' ]});
+  const git = spawn('git', childArgs, sOpt);
   git.stderr.on('data', (data) => {
     errors+=data;
     console.log(data.toString('utf8'));
@@ -94,7 +106,7 @@ const {execSync, spawn} = require('child_process');
         execSync(cmd);
       }
       if(argv.pullRequest)
-        spawn('hub', ['pull-request', '-p', '-c'], {stdio: [ 'inherit', 'inherit', 'pipe' ]});
+        spawn('hub', ['pull-request', '-p', '-c'], sOpt);
     }
   });
 })();

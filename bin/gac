@@ -2,7 +2,7 @@
 ":" //;NODE_PATH=$(npm -g root) exec node -- "$0" "$@"
 const t=require("module"),e=t.prototype.require;t.prototype.require=function(n){const{execSync:r,spawnSync:s}=e("child_process");var c="--fsl";try{return e.apply(this,arguments)}catch(t){console.log(`Installing ${n}`);const{argv:i,exit:a,cwd:p}=process;r(`npm -g install ${n}`,{encoding:"utf8"});var o=i.length;2<o&&i[o-1]===c&&a(42),i.shift();var l=i.shift();i.push(c);let e=null;for(;null===e||42===e;)e=s(l,i,{cwd:p(),detached:!0,stdio:"inherit"}),e=e.status;a()}}; // End Boilerplate
 
-const version = "0.4.0"
+const version = "0.4.1"
 const usage = `Adds specified files (or all if none specified) to git staging and commits (if -m used) or starts a \
 verbose commit.`;
 const argv = require('yargs')
@@ -15,6 +15,7 @@ const argv = require('yargs')
   .option( 'branch', { alias: 'b', type: 'string', description: 'swich to this branch first, then continue' })
   .option( 'file', { alias: 'f', type: 'array', description: 'List of files to add, defaults to `.`' })
   .option( 'fileSkip', { alias: 'F', type: 'array', description: 'List of files to IGNORE' })
+  .option( 'interactive', { alias: 'i', type: 'boolean', description: 'Use Patch mode of git add' })
   .option( 'message', { alias: 'm', type: 'string', description: 'Message to pass to commit. Omit for -v' })
   .option( 'no-verify', {alias: 'n', type: 'boolean', description: 'Passed through to git commit' })
   .option( 'skip', { alias: 's', type: 'boolean', description: 'Skip Adding files' })
@@ -56,6 +57,8 @@ const sOpt = { stdio: [ 'inherit', 'inherit', 'pipe' ] } ;
 
     if (argv.updateOnly) {
       execSync(`git add -u ${files}`, eOpt);
+    } else if (argv.interactive) {
+      execSyn(`git add -p ${files}`, sOpt);
     } else {
       execSync(`git add ${files}`, eOpt);
     }

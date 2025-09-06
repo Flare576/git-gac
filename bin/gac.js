@@ -1,12 +1,14 @@
-#!/bin/sh
-":" //;NODE_PATH=$(npm -g root) exec node -- "$0" "$@"
-const t=require("module"),e=t.prototype.require;t.prototype.require=function(n){const{execSync:r,spawnSync:s}=e("child_process");var c="--fsl";try{return e.apply(this,arguments)}catch(t){console.log(`Installing ${n}`);const{argv:i,exit:a,cwd:p}=process;r(`npm -g install ${n}`,{encoding:"utf8"});var o=i.length;2<o&&i[o-1]===c&&a(42),i.shift();var l=i.shift();i.push(c);let e=null;for(;null===e||42===e;)e=s(l,i,{cwd:p(),detached:!0,stdio:"inherit"}),e=e.status;a()}};
-// End Boilerplate - see https://github.com/Flare576/newScript
+#!/usr/bin/env node
 
-const version = "0.4.3"
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
+import { execSync, spawnSync, spawn } from 'child_process';
+
+const version = "1.0.0"
 const usage = `Adds specified files (or all if none specified) to git staging and commits (if -m used) or starts a \
 verbose commit.`;
-const argv = require('yargs')
+
+const argv = yargs(hideBin(process.argv))
   .strict()
   .usage("$0", usage)
   .version(version)
@@ -24,7 +26,6 @@ const argv = require('yargs')
   .option( 'push', { alias: 'p', type: 'boolean', description: 'Flag to push after commit' })
   .option( 'pullRequest', { alias: 'r', type: 'boolean', description: 'Flag to start a PR after commit' })
   .option( 'updateOnly', { alias: 'u', type: 'boolean', description: 'Flag to ignore untracked files' })
-  .option( 'fsl', { hidden: true, type: 'boolean' }) // Allow seemless dependency loading
   .example( 'gac', 'Adds all files/subfolder files, then opens a verbose commit' )
   .example( 'gac -b new-stuff', 'Switch (and create if necessary) to `new-stuff` branch, add all files/subfolder files, then open verbose commit' )
   .example( 'gac -a', 'Adds all files/subfolder files, then opens the LAST commit in ammend/verbose' )
@@ -35,8 +36,8 @@ const argv = require('yargs')
   .example( 'gac -sa', 'Opens last commit as ammend in verbose mode' )
   .example( 'gac -a -f myFile', 'Removes all files from last commit, adds only myFile, opens new commit with prior ' +
     'message in amend mode' )
-  .argv;
-const {execSync, spawnSync, spawn} = require('child_process');
+  .parseSync();
+
 const eOpt = { encoding: 'utf8' };
 const sOpt = { stdio: [ 'inherit', 'inherit', 'pipe' ] } ;
 
@@ -115,4 +116,3 @@ const sOpt = { stdio: [ 'inherit', 'inherit', 'pipe' ] } ;
     }
   });
 })();
-// vim: ft=javascript
